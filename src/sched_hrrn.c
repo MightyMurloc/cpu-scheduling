@@ -32,6 +32,9 @@ int sched_hrrn(struct process *p_list, int list_size)
 		p_list[next_proc].assigned_timeslot[0].start_time = t;
 		t += p_list[next_proc].burst_time;
 		p_list[next_proc].assigned_timeslot[0].end_time = t;
+		p_list[next_proc].waiting_time = t - p_list[next_proc].arrival_time -
+												p_list[next_proc].burst_time;
+		p_list[next_proc].turnaround_time = t - p_list[next_proc].arrival_time;
 		p_list[next_proc].remaining_time = 0;
 		//printf("Time: %d\n", t);
 	}
@@ -157,15 +160,13 @@ int main(int argc, char *argv[])
 	fprintf(ofp, "Process\tBurst time\tWaiting time\tTurnaround time\n");
 
 	/* Calculate scheduling criteria */
-	sched_criteria(p_list, list_size, w_time, ta_time);
-
 	for (int i = 0; i < list_size; i++)
 	{
-		total_waiting_time += w_time[i];
-		total_turnaround_time += ta_time[i];
+		total_waiting_time += p_list[i].waiting_time;
+		total_turnaround_time += p_list[i].turnaround_time;
 
 		fprintf(ofp, "%d\t%d\t\t%d\t\t%d\n", p_list[i].pid,
-				p_list[i].burst_time, w_time[i], ta_time[i]);
+				p_list[i].burst_time, p_list[i].waiting_time, p_list[i].turnaround_time);
 	}
 
 	fprintf(ofp, "Average waiting time: %3.3f\n",
