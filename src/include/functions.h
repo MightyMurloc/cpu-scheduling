@@ -3,13 +3,15 @@
 
 #include "structs.h"
 
-/*
- ***************************** 
- *        Functions          *
- *****************************
+/**
+ * 	FUNCTIONS
  */
 
-/* Function to sort the process list based on their arrival time */
+/**
+ * 	Function to sort process based on their arrival time
+ * @param p_list    Process list
+ * @param list_size Size of process list
+ */
 void sort_on_arrival_time(struct process *p_list, int list_size)
 {
 	int i = 1;
@@ -27,8 +29,6 @@ void sort_on_arrival_time(struct process *p_list, int list_size)
 	}
 }
 
-/* Function to find waiting time and turnaround time
- * For FCFS and SJF ONLY */
 void sched_criteria(struct process *p_list, int list_size,
 					int *w_time, int *ta_time)
 {
