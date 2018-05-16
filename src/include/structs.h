@@ -16,9 +16,9 @@
 
 struct timeslot
 {
-	int start_time;		/* TImestamp at the start of execution */
+	int start_time;		/*!< Timestamp at the start of execution */
 
-	int end_time;		/* Timestanp at the end of excution */
+	int end_time;		/*!< Timestanp at the end of excution */
 };
 
 struct process

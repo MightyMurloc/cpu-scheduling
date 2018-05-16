@@ -3,7 +3,7 @@
 #include "include/queue.h"
 #include "include/functions.h"
 
-int time; /* Used to simulate system clock */
+int time; /*!< Used to simulate system clock */
 
 /* ROUND ROBIN SCHEDULER */
 int sched_rr(struct process_queue *p_queue, int quantum_time)

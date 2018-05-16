@@ -18,7 +18,14 @@ struct process_queue
 	/* Head and tail of queue */
 	struct process_node *head;
 	struct process_node *tail;
+	int quantum; /*!< Time a process can spend on queue before being pushed down */
 };
+
+void init_queue(struct process_queue *p_queue, int q_time)
+{
+	p_queue->head = p_queue->tail = NULL;
+	p_queue->quantum = q_time;
+}
 
 int queue_empty(struct process_queue *p_queue)
 {
