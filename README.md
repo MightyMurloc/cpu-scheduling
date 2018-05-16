@@ -8,8 +8,6 @@ This project simulates CPU scheduling using popular algorithms
  </ol>
  
  <b>Upcoming:</b>
- <ul>
-  <li>~~Dynamic queue mechanism, which allows loading and removing processes at any time.~~</li>
-  <li>~~Multi-level Feedback Queue (MLFQ) with 5 levels~~ (somewhat done)</li>
-  <li>Some other scheduling criterias: **response time** and **throughput**
- </ul>
+* ~~Dynamic queue mechanism, which allows loading and removing processes at any time.~~
+* ~~Multi-level Feedback Queue (MLFQ) with 5 levels~~ (somewhat done)
+* Some other scheduling criterias: **response time** and **throughput**
