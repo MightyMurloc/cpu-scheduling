@@ -32,7 +32,25 @@ rr: sched_rr.o
 	@mv rr bin/
 	@echo "Made RR."
 
-all: fcfs sjf srtf rr
+hrrn: sched_hrrn.o
+	@gcc -o hrrn sched_hrrn.o -I.
+	@rm -f sched_hrrn.o
+	@mv hrrn bin/
+	@echo "Made HRRN."
+
+edf: sched_edf.o
+	@gcc -o edf sched_edf.o -I.
+	@rm -f sched_edf.o
+	@mv edf bin/
+	@echo "Made EDF."
+
+mfbq: sched_mfbq.o
+	@gcc -o mfbq sched_mfbq.o -I.
+	@rm -f sched_mfbq.o
+	@mv mfbq bin/
+	@echo "Made MFBQ."
+
+all: fcfs sjf srtf rr hrrn edf mfbq
 
 clean:
 	@echo "Cleaning up..."
