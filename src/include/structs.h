@@ -32,6 +32,7 @@ struct process
 						  						 to complete the job */
 	int remaining_time;						/*!< Remaining time of process at
 						   						current timestamp */
+	int deadline;							/**< Process deadline */
 
 	/* Values used to track process */
 	struct timeslot *assigned_timeslot;		/**< An array to store process's timeslots */
@@ -42,7 +43,11 @@ struct process
 
 	int turnaround_time;					/**< Process turnaround time */
 
+	int response_time;						/**< Process response time */
+
 	int flag;								/*!< The current queue the process is in */
+
+	int elapsed_time;
 };
 
 #endif
