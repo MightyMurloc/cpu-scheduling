@@ -25,11 +25,9 @@ struct process_queue p_queue[MAX_PRIORITY];
 
 
 /**
- * @brief      Perform MFBQ scheduling
- *
- * @param      r_queue  Pointer to ready queue
- *
- * @return     0 if successful
+ * Perform MFBQ scheduling
+ * @param  r_queue Pointer to the ready queue
+ * @return         0 if successful
  */
 int sched_mfbq(struct process_queue *r_queue)
 {
@@ -43,6 +41,11 @@ int sched_mfbq(struct process_queue *r_queue)
 
 	while (1)
 	{
+		///
+		// Debug: uncomment this line
+		   printf("Time: %d\n", time);
+		   printf("Peek: %d\n", peek);
+		///
 		prev = peek; // This will change if the prev. process is preempted
 
 		/* For the last iteration */
@@ -54,8 +57,19 @@ int sched_mfbq(struct process_queue *r_queue)
 		{
 			/* A process has arrived */
 			pget = de_queue(r_queue);
+			if (proc != NULL)
+			{
+				proc = de_queue(&p_queue[proc->flag]);
+			}
 			en_queue(&p_queue[0], pget);
-			printf("Process %d enqueued\n", pget->pid);
+			if (proc != NULL)
+			{
+				en_queue(&p_queue[proc->flag], proc);
+			}
+			///
+			// Debug: uncomment this line
+			   printf("Process %d enqueued\n", pget->pid);
+			///
 			pget->flag = 0;
 			event = NEW_PROCESS;
 		}
@@ -69,6 +83,7 @@ int sched_mfbq(struct process_queue *r_queue)
 			}
 			peek = -1;
 		}
+		printf("peek = %d, prev = %d\n", peek, prev);
 
 		/* If all queues are empty, we're done. */
 		if (peek == -1 && queue_empty(r_queue))
@@ -76,13 +91,18 @@ int sched_mfbq(struct process_queue *r_queue)
 			break;
 		}
 
-		if (peek != prev && event != PREEMPTED) // A process gets prempted, or the first one arrives
+		///
+		// Debug: uncomment this line
+		///
+		if (peek != prev && (event == NEW_PROCESS || event == Q_EXPIRED)) // A process gets prempted, or the first one arrives
 		{
-			proc = de_queue(&p_queue[peek]);
-			/**
-			 * 	Debug: uncomment this line
-			 * 	printf("Got process %d in Q%d\n", proc->pid, peek);
-			 */
+			pget = NULL;
+			proc = p_queue[peek].head->data;
+			//proc = de_queue(&p_queue[peek]);
+			///
+			// 	Debug: uncomment this line
+			 	printf("Got process %d in Q%d\n", proc->pid, peek);
+			///
 			event = PREEMPTED;
 			proc->timeslot_count++;
 			int i = proc->timeslot_count - 1;
@@ -90,13 +110,14 @@ int sched_mfbq(struct process_queue *r_queue)
 			proc->assigned_timeslot[i].end_time += time;
 			current = i;
 		}
-		else if (peek == prev && event == Q_EXPIRED)
+		else if (peek == prev && (event == Q_EXPIRED || event == NEW_PROCESS))
 		{
-			proc = de_queue(&p_queue[peek]);
-			/**
-			 * 	Debug: uncomment this line
-			 * 	printf("Got process %d in Q%d\n", proc->pid, peek);
-			 */
+			proc = p_queue[peek].head->data;
+			//proc = de_queue(&p_queue[peek]);
+			///
+			// 	Debug: uncomment this line
+			 	printf("Got process %d in Q%d\n", proc->pid, peek);
+			///
 			event = DEFAULT;
 			proc->timeslot_count++;
 			int i = proc->timeslot_count - 1;
@@ -109,44 +130,50 @@ int sched_mfbq(struct process_queue *r_queue)
 
 		if (proc->remaining_time == 0)
 		{
-			proc->waiting_time = time + 1 - proc->burst_time - proc->arrival_time;
-			if (proc->waiting_time < 0)
-			{
-				proc->waiting_time = 0;
-			}
-
-			proc->turnaround_time = proc->burst_time + proc->waiting_time;
 			/**
-			 * 	Debug: uncomment this line
-			 * 	printf("Process %d completed\n", proc->pid);
+			 * The code in the comment seems to not be working
+			 * proc->waiting_time = time + 1 - proc->burst_time - proc->arrival_time;
+			 * if (proc->waiting_time < 0)
+			    {
+					proc->waiting_time = 0;
+				}
+				proc->turnaround_time = proc->burst_time + proc->waiting_time;
 			 */
+
+			///
+			// 	Debug: uncomment this line
+			 	printf("Process %d completed\n", proc->pid);
+			///
 			event = Q_EXPIRED;
 			time++;
 			proc->assigned_timeslot[current].end_time = time;
+			proc = de_queue(&p_queue[proc->flag]);
 			proc = NULL;
 			peek++;
 			continue;
 		}
 
 		proc->assigned_timeslot[current].end_time++;
-		elapsed_time = proc->assigned_timeslot[current].end_time -
-				proc->assigned_timeslot[current].start_time;
-		/**
-		 * 	Debug: uncomment this line
-		 * 	printf("Process %d has run for %d\n", proc->pid, elapsed_time);
-		 */
+		proc->elapsed_time++;
+		///
+		// 	Debug: uncomment this line
+		 	printf("Process %d has run for %d\n", proc->pid, proc->elapsed_time);
+		///
 
-		if (elapsed_time == p_queue[proc->flag].quantum)
+		if (proc->elapsed_time == p_queue[proc->flag].quantum)
 		{
-			/** 
-			 * Debug: uncomment this line
-			 * printf("Interrupt: process %d used up quanta\n", proc->pid);
-			 */
+			/// 
+			// Debug: uncomment this line
+			   printf("Interrupt: process %d used up quanta\n", proc->pid);
+			///
 			event = Q_EXPIRED;
 			/* A process has used up the queue's quantum time */
+			proc = de_queue(&p_queue[proc->flag]);
 			en_queue(&p_queue[proc->flag + 1], proc);
 			peek = proc->flag + 1;
 			proc->flag++;
+			proc->elapsed_time = 0;
+			printf("Process %d now put to queue %d\n", proc->pid, proc->flag);
 		}
 		time++; // Advances time
 	}
@@ -154,15 +181,36 @@ int sched_mfbq(struct process_queue *r_queue)
 	return 0;
 }
 
-
 /**
- * @brief      Main function
- *
- * @param[in]  argc  Number of arguments
- * @param      argv  Array of arguments
- *
- * @return     0 if successful
+ * Calculate scheduling criteria
+ * 
+ * @param p_list    Process array
+ * @param list_size Size of the array
  */
+void calc_sched_criteria(struct process *p_list, int list_size)
+{
+	/* Find waiting time, turnaround time and response time */
+	for (int i = 0; i < list_size; i++)
+	{
+		p_list[i].waiting_time = p_list[i].assigned_timeslot[0].start_time - p_list[i].arrival_time;
+		for (int j = 0; j < p_list[i].timeslot_count - 1; j++)
+		{
+			// Waiting time
+			p_list[i].waiting_time +=
+				p_list[i].assigned_timeslot[j + 1].start_time - p_list[i].assigned_timeslot[j].end_time;
+		}
+
+		// Turnaround time
+		int last_timeslot = p_list[i].timeslot_count - 1;
+		p_list[i].turnaround_time = p_list[i].assigned_timeslot[last_timeslot].end_time - p_list[i].arrival_time;
+
+		// Response time
+		p_list[i].response_time = p_list[i].assigned_timeslot[0].start_time - p_list[i].arrival_time;
+		printf("Response time of P%d: %d\n", i, p_list[i].response_time);
+	}
+}
+
+/** Main function */
 int main(int argc, char *argv[])
 {
 	/* Parameters to parse console arguments */
@@ -238,6 +286,7 @@ int main(int argc, char *argv[])
 		p_list[list_counter].timeslot_count = 0;
 		p_list[list_counter].pid = list_counter;
 		p_list[list_counter].remaining_time = p_list[list_counter].burst_time;
+		p_list[list_counter].elapsed_time = 0;
 
 		/* Acknowledge a new process has been imported */
 		list_size = ++list_counter;
@@ -294,23 +343,34 @@ int main(int argc, char *argv[])
 	}
 
 	fprintf(ofp, "\nScheduling criteria: \n\n");
-	fprintf(ofp, "%-8s %-10s %-12s %-15s\n", "Process", "Burst time",
-					"Waiting time", "Turnaround time");
+	fprintf(ofp, "%-8s %-10s %-12s %-15s %-13s\n", "Process", "Burst time",
+					"Waiting time", "Turnaround time", "Response time");
+
+	calc_sched_criteria(p_list, list_size);
 
 	/* Calculate scheduling criteria */
+	float total_time = 0;
 	for (int i = 0; i < list_size; i++)
 	{
 		total_waiting_time += p_list[i].waiting_time;
 		total_turnaround_time += p_list[i].turnaround_time;
 
-		fprintf(ofp, "%-8d %-10d %-12d %-15d\n", p_list[i].pid,
-				p_list[i].burst_time, p_list[i].waiting_time, p_list[i].turnaround_time);
+		fprintf(ofp, "%-8d %-10d %-12d %-15d %-13d\n", p_list[i].pid,
+				p_list[i].burst_time, p_list[i].waiting_time, p_list[i].turnaround_time, p_list[i].response_time);
+
+		int last_timeslot = p_list[i].timeslot_count - 1;
+		if (total_time < p_list[i].assigned_timeslot[last_timeslot].end_time)
+		{
+			total_time = p_list[i].assigned_timeslot[last_timeslot].end_time;
+		}
 	}
 
 	fprintf(ofp, "Average waiting time: %3.3f\n",
 					(float) total_waiting_time / (float) list_size);
 	fprintf(ofp, "Average turnaround time : %3.3f\n",
 					(float) total_turnaround_time / (float) list_size);
+	fprintf(ofp, "Throughput: %1.3f\n",
+					(float) list_size / (float) total_time);
 
 	fclose(ofp);
 
