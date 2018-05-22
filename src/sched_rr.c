@@ -5,7 +5,7 @@ int time; /* Used to simulate system clock */
 
 /* ROUND ROBIN SCHEDULER */
 int sched_rr(struct process *p_list, int list_size,
-				int quantum_time, int *w_time)
+									int quantum_time)
 {
 	/* Sort on arrival time */
 	sort_on_arrival_time(p_list, list_size);
@@ -47,10 +47,6 @@ int sched_rr(struct process *p_list, int list_size,
 					time += p_list[i].remaining_time;
 					p_list[i].remaining_time = 0;
 					p_list[i].assigned_timeslot[current].end_time = time;
-
-					// Calulate waiting time
-					w_time[i] = time - p_list[i].burst_time -
-											p_list[i].arrival_time;
 				}
 			}
 		}
@@ -63,18 +59,6 @@ int sched_rr(struct process *p_list, int list_size,
 	}
 
 	return 0;
-}
-
-/* Function to find turnaround time */
-void find_turnaround_time(struct process *p_list, int list_size,
-							int *w_time, int *ta_time)
-{
-	/* Calculate turnaround time by adding
-	 * burst time and waiting time */
-	for (int i = 0; i < list_size; i++)
-	{
-		ta_time[i] = p_list[i].burst_time + w_time[i];
-	}
 }
 
 /* MAIN PROGRAM */
@@ -99,10 +83,9 @@ int main(int argc, char *argv[])
 	char 	*endptr;
 
 	/* Scheduling criteria */
-	int 	w_time[MAX_PROCESS];
-	int 	ta_time[MAX_PROCESS];
 	int 	total_waiting_time = 0;
 	int 	total_turnaround_time = 0;
+	int 	total_response_time = 0;
 
 	/* Argument parsing */
 	while ((param = getopt(argc, argv, "i:o:q:")) != -1)
@@ -184,10 +167,7 @@ int main(int argc, char *argv[])
 	time = 0;
 
 	/* Implement scheduler */
-	sched_rr(p_list, list_size, quantum_time, w_time);
-
-	/* Find turnaround time */
-	find_turnaround_time(p_list, list_size, w_time, ta_time);
+	sched_rr(p_list, list_size, quantum_time);
 
 	/* Write data to output file */
 
@@ -200,6 +180,7 @@ int main(int argc, char *argv[])
 		return -1;
 	}
 
+	fprintf(ofp, "Quantume time: %d\n", quantum_time);
 	/* Produce output data */
 	while (list_counter < list_size)
 	{
@@ -216,22 +197,37 @@ int main(int argc, char *argv[])
 	}
 
 	fprintf(ofp, "\nScheduling criteria: \n\n");
-	fprintf(ofp, "Process\tBurst time\tWaiting time\tTurnaround time\n");
+	fprintf(ofp, "%-8s %-10s %-12s %-15s %-13s\n", "Process", "Burst time",
+					"Waiting time", "Turnaround time", "Response time");
+
+	calc_sched_criteria(p_list, list_size);
 
 	/* Calculate scheduling criteria */
+	float total_time = 0;
 	for (int i = 0; i < list_size; i++)
 	{
-		total_waiting_time += w_time[i];
-		total_turnaround_time += ta_time[i];
+		total_waiting_time += p_list[i].waiting_time;
+		total_turnaround_time += p_list[i].turnaround_time;
+		total_response_time += p_list[i].response_time;
 
-		fprintf(ofp, "%d\t%d\t\t%d\t\t%d\n", p_list[i].pid,
-				p_list[i].burst_time, w_time[i], ta_time[i]);
+		fprintf(ofp, "%-8d %-10d %-12d %-15d %-13d\n", p_list[i].pid,
+				p_list[i].burst_time, p_list[i].waiting_time, p_list[i].turnaround_time, p_list[i].response_time);
+
+		int last_timeslot = p_list[i].timeslot_count - 1;
+		if (total_time < p_list[i].assigned_timeslot[last_timeslot].end_time)
+		{
+			total_time = p_list[i].assigned_timeslot[last_timeslot].end_time;
+		}
 	}
 
 	fprintf(ofp, "Average waiting time: %3.3f\n",
 					(float) total_waiting_time / (float) list_size);
 	fprintf(ofp, "Average turnaround time : %3.3f\n",
 					(float) total_turnaround_time / (float) list_size);
+	fprintf(ofp, "Average response time: %3.3f\n",
+					(float) total_response_time / (float) list_size);
+	fprintf(ofp, "Throughput: %1.3f\n",
+					(float) list_size / (float) total_time);
 
 	fclose(ofp);
 	

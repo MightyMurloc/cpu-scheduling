@@ -181,35 +181,6 @@ int sched_mfbq(struct process_queue *r_queue)
 	return 0;
 }
 
-/**
- * Calculate scheduling criteria
- * 
- * @param p_list    Process array
- * @param list_size Size of the array
- */
-void calc_sched_criteria(struct process *p_list, int list_size)
-{
-	/* Find waiting time, turnaround time and response time */
-	for (int i = 0; i < list_size; i++)
-	{
-		p_list[i].waiting_time = p_list[i].assigned_timeslot[0].start_time - p_list[i].arrival_time;
-		for (int j = 0; j < p_list[i].timeslot_count - 1; j++)
-		{
-			// Waiting time
-			p_list[i].waiting_time +=
-				p_list[i].assigned_timeslot[j + 1].start_time - p_list[i].assigned_timeslot[j].end_time;
-		}
-
-		// Turnaround time
-		int last_timeslot = p_list[i].timeslot_count - 1;
-		p_list[i].turnaround_time = p_list[i].assigned_timeslot[last_timeslot].end_time - p_list[i].arrival_time;
-
-		// Response time
-		p_list[i].response_time = p_list[i].assigned_timeslot[0].start_time - p_list[i].arrival_time;
-		printf("Response time of P%d: %d\n", i, p_list[i].response_time);
-	}
-}
-
 /** Main function */
 int main(int argc, char *argv[])
 {
@@ -233,6 +204,7 @@ int main(int argc, char *argv[])
 	/* Scheduling criteria */
 	int 	total_waiting_time = 0;
 	int 	total_turnaround_time = 0;
+	int 	total_response_time = 0;
 
 	/* Argument parsing */
 	while ((param = getopt(argc, argv, "i:o:q")) != -1)
@@ -354,6 +326,7 @@ int main(int argc, char *argv[])
 	{
 		total_waiting_time += p_list[i].waiting_time;
 		total_turnaround_time += p_list[i].turnaround_time;
+		total_response_time += p_list[i].response_time;
 
 		fprintf(ofp, "%-8d %-10d %-12d %-15d %-13d\n", p_list[i].pid,
 				p_list[i].burst_time, p_list[i].waiting_time, p_list[i].turnaround_time, p_list[i].response_time);
@@ -367,8 +340,10 @@ int main(int argc, char *argv[])
 
 	fprintf(ofp, "Average waiting time: %3.3f\n",
 					(float) total_waiting_time / (float) list_size);
-	fprintf(ofp, "Average turnaround time : %3.3f\n",
+	fprintf(ofp, "Average turnaround time: %3.3f\n",
 					(float) total_turnaround_time / (float) list_size);
+	fprintf(ofp, "Average responsse time: %3.3f\n",
+					(float) total_response_time / (float) list_size);
 	fprintf(ofp, "Throughput: %1.3f\n",
 					(float) list_size / (float) total_time);
 

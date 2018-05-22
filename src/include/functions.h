@@ -29,24 +29,26 @@ void sort_on_arrival_time(struct process *p_list, int list_size)
 	}
 }
 
-void sched_criteria(struct process *p_list, int list_size,
-					int *w_time, int *ta_time)
+void calc_sched_criteria(struct process *p_list, int list_size)
 {
-	// Waiting time for first process is its arrival time
-	w_time[0] = p_list[0].arrival_time;
-
-	// Calculate waiting time
-	for (int i = 1; i < list_size; i++)
-	{
-		w_time[i] = p_list[i - 1].burst_time + w_time[i - 1] -
-											p_list[i].arrival_time;
-	}
-
-	// Calculate turnaround time
+	/* Find waiting time, turnaround time and response time */
 	for (int i = 0; i < list_size; i++)
 	{
-		ta_time[i] = p_list[i].burst_time + w_time[i];
+		p_list[i].waiting_time = p_list[i].assigned_timeslot[0].start_time - p_list[i].arrival_time;
+		for (int j = 0; j < p_list[i].timeslot_count - 1; j++)
+		{
+			// Waiting time
+			p_list[i].waiting_time +=
+				p_list[i].assigned_timeslot[j + 1].start_time - p_list[i].assigned_timeslot[j].end_time;
+		}
+
+		// Turnaround time
+		int last_timeslot = p_list[i].timeslot_count - 1;
+		p_list[i].turnaround_time = p_list[i].assigned_timeslot[last_timeslot].end_time - p_list[i].arrival_time;
+
+		// Response time
+		p_list[i].response_time = p_list[i].assigned_timeslot[0].start_time - p_list[i].arrival_time;
 	}
-}
+}	
 
 #endif

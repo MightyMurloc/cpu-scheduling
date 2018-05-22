@@ -54,5 +54,5 @@ all: fcfs sjf srtf rr hrrn edf mfbq
 
 clean:
 	@echo "Cleaning up..."
-	@rm -f bin/fcfs bin/sjf bin/srtf bin/rr
+	@rm -f bin/*
 	@echo "Done."

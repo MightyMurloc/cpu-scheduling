@@ -1,0 +1,21 @@
+Quantume time: 3
+Process  0 start     0 end     3
+Process  0 start    10 end    13
+Process  0 start    15 end    16
+Process  1 start     3 end     6
+Process  1 start    13 end    14
+Process  2 start     6 end     7
+Process  3 start     7 end    10
+Process  3 start    14 end    15
+
+Scheduling criteria: 
+
+Process  Burst time Waiting time Turnaround time Response time
+0        7          9            16              0            
+1        4          8            12              1            
+2        1          2            3               2            
+3        4          6            10              2            
+Average waiting time: 6.250
+Average turnaround time : 10.250
+Average response time: 1.250
+Throughput: 0.250

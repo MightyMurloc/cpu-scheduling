@@ -1,0 +1,16 @@
+Process  0 start     0 end     7
+Process  1 start     8 end    12
+Process  2 start     7 end     8
+Process  3 start    12 end    16
+
+Scheduling criteria: 
+
+Process  Burst time Waiting time Turnaround time Response time
+0        7          0            7               0            
+1        4          6            10              6            
+2        1          3            4               3            
+3        4          7            11              7            
+Average waiting time: 4.000
+Average turnaround time : 8.000
+Average response time: 4.000
+Throughput: 0.250

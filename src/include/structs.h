@@ -30,14 +30,15 @@ struct process
 						   						and wishes to start */
 	int burst_time;							/*!< Amount of time processes requires
 						  						 to complete the job */
-	int remaining_time;						/*!< Remaining time of process at
-						   						current timestamp */
 	int deadline;							/**< Process deadline */
 
 	/* Values used to track process */
 	struct timeslot *assigned_timeslot;		/**< An array to store process's timeslots */
 
 	int timeslot_count;						/**< Number of timeslots */
+
+	int remaining_time;						/*!< Remaining time of process at
+						   						current timestamp */
 
 	int waiting_time;						/**< Time spent waiting */
 
